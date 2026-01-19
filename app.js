@@ -7,7 +7,7 @@ localforage.config({ name: 'DroneReport' });
 
 function setStatus(s){ if(statusEl) statusEl.textContent = s; }
 
-function fetchGPSOnce(timeout = 10000){
+function fetchGPSOnce(timeout = 30000){
   return new Promise((resolve, reject) => {
     if(!navigator.geolocation) return reject(new Error('Geolocation not supported'));
     navigator.geolocation.getCurrentPosition(pos => {
