@@ -10,9 +10,41 @@ function setStatus(s){ if(statusEl) statusEl.textContent = s; }
 function fetchGPSOnce(timeout = 30000){
   return new Promise((resolve, reject) => {
     if(!navigator.geolocation) return reject(new Error('Geolocation not supported'));
-    navigator.geolocation.getCurrentPosition(pos => {
+    let done = false;
+
+    const onSuccess = pos => {
+      if(done) return;
+      done = true;
+      clearTimeout(timer);
       resolve({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) });
-    }, err => reject(err), { enableHighAccuracy: true, timeout });
+    };
+    const onError = err => {
+      if(done) return;
+      done = true;
+      clearTimeout(timer);
+      // provide detailed error message
+      reject(new Error('Geolocation error: ' + (err && err.message ? err.message : JSON.stringify(err))));
+    };
+
+    const timer = setTimeout(() => {
+      if(done) return;
+      done = true;
+      // try to stop any ongoing watch if set
+      if(watchId !== null) navigator.geolocation.clearWatch(watchId);
+      reject(new Error('Geolocation timeout'));
+    }, timeout);
+
+    // try getCurrentPosition first
+    let watchId = null;
+    navigator.geolocation.getCurrentPosition(onSuccess, err => {
+      // if immediate getCurrentPosition fails, fallback to watchPosition
+      console.warn('getCurrentPosition failed, trying watchPosition', err);
+      try{
+        watchId = navigator.geolocation.watchPosition(onSuccess, onError, { enableHighAccuracy: true, maximumAge: 0 });
+      }catch(e){
+        onError(e);
+      }
+    }, { enableHighAccuracy: true, timeout, maximumAge: 0 });
   });
 }
 
