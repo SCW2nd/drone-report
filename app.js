@@ -1,5 +1,5 @@
 // Minimal client logic: GPS, local save (localForage), jsPDF generation, POST to GAS
-const GAS_ENDPOINT = 'https://https://script.google.com/macros/s/AKfycbz3ccw7Wr6irXQM05PPaIq47DqWVzucd1DMDlPDAlV_OMEAmISMtg35uZvzIvJSbOE9_g/exec // ← ここにGASデプロイURLを入れてください
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz-uHGm29SQjhTw9saq7Ft3vs77H0dZ-clrkLoOKHc6/dev // ← ここにGASデプロイURLを入れてください
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
