@@ -1,5 +1,5 @@
 const CACHE_NAME = 'drone-report-v1';
-const FILES_TO_CACHE = ['', 'index.html', 'app.js', 'manifest.json'];
+const FILES_TO_CACHE = ['index.html', 'app.js', 'manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(FILES_TO_CACHE)));
