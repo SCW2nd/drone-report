@@ -1,15 +1,13 @@
-// Minimal client logic: GPS, local save (localForage), jsPDF generation, POST to GAS
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyRQMcG210UZ8Si9HmKDqcwFBMtn5Fiy8iR6A_u-n4G-VFKLfoQ6BoJ6ptjlPxPA9VD7g/exec'; // ← ここにGASデプロイURLを入れてください
+// app.js - corrected version
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyRQMcG210UZ8Si9HmKDqcwFBMtn5Fiy8iR6A_u-n4G-VFKLfoQ6BoJ6ptjlPxPA9VD7g/exec'; // ← ここを置換
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
 localforage.config({ name: 'DroneReport' });
 
-// 状態表示
 function setStatus(s){ if(statusEl) statusEl.textContent = s; }
 
-// GPS 取得（ロード時とフォーム送信時の再取得用）
-async function fetchGPSOnce(timeout = 10000){
+function fetchGPSOnce(timeout = 10000){
   return new Promise((resolve, reject) => {
     if(!navigator.geolocation) return reject(new Error('Geolocation not supported'));
     navigator.geolocation.getCurrentPosition(pos => {
@@ -18,7 +16,6 @@ async function fetchGPSOnce(timeout = 10000){
   });
 }
 
-// ローカルキューに保存
 async function queueReport(obj){
   const q = (await localforage.getItem('queue')) || [];
   q.push(obj);
@@ -26,16 +23,14 @@ async function queueReport(obj){
   setStatus('Saved locally; will sync when online.');
 }
 
-// キュー同期
 async function syncQueue(){
   const q = (await localforage.getItem('queue')) || [];
   if(!q.length) return;
   setStatus('Syncing local reports...');
-  for(const item of q.slice()){ // iterate copy
+  for(const item of q.slice()){
     try{
       const res = await sendJsonToGAS(item);
       if(res && res.status === 'ok'){
-        // pop first element (FIFO)
         const cur = (await localforage.getItem('queue')) || [];
         cur.shift();
         await localforage.setItem('queue', cur);
@@ -43,4 +38,88 @@ async function syncQueue(){
         setStatus('Sync error: ' + (res && res.message || 'unknown'));
         return;
       }
+    }catch(e){
+      console.error('Sync failed', e);
+      setStatus('Sync error: ' + e.message);
+      return;
+    }
+  }
+  setStatus('All local reports synced.');
+}
 
+async function sendJsonToGAS(payload){
+  setStatus('Sending to server...');
+  const res = await fetch(GAS_ENDPOINT, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  const text = await res.text();
+  let json = null;
+  try { json = JSON.parse(text); } catch(e){ json = {status:'error', message:'invalid json response', raw:text}; }
+  return json;
+}
+
+(async function init(){
+  try{
+    setStatus('Obtaining GPS…');
+    const pos = await fetchGPSOnce().catch(()=>null);
+    if(pos){
+      const latEl = document.getElementById('lat');
+      const lngEl = document.getElementById('lng');
+      if(latEl) latEl.value = pos.lat;
+      if(lngEl) lngEl.value = pos.lng;
+      setStatus('GPS obtained');
+    } else {
+      setStatus('GPS not available yet.');
+    }
+  }catch(err){
+    setStatus('GPS error: ' + (err.message || err));
+  }
+  if(navigator.onLine) syncQueue();
+})();
+
+window.addEventListener('online', () => {
+  setStatus('Back online — syncing...');
+  syncQueue();
+});
+
+if(form){
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const obj = {};
+    fd.forEach((v,k) => obj[k] = v);
+    obj.timestamp = new Date().toISOString();
+
+    try{
+      const pos = await fetchGPSOnce().catch(()=>null);
+      if(pos){
+        obj.lat = pos.lat;
+        obj.lng = pos.lng;
+      }
+    }catch(err){
+      console.warn('GPS fetch failed on submit', err);
+    }
+
+    try{
+      if(navigator.onLine){
+        const res = await sendJsonToGAS(obj);
+        if(res && res.status === 'ok'){
+          setStatus('Uploaded. FileId: ' + (res.fileId || 'unknown'));
+        } else {
+          console.warn('Server error response', res);
+          await queueReport(obj);
+        }
+      } else {
+        if(document.getElementById('saveLocal') && document.getElementById('saveLocal').checked){
+          await queueReport(obj);
+        } else {
+          setStatus('Offline and not saving locally. Enable local save to retain data.');
+        }
+      }
+    }catch(err){
+      console.error('Submit error', err);
+      await queueReport(obj);
+    }
+  });
+}
