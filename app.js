@@ -1,5 +1,5 @@
-// app.js - full corrected version
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby43wYy7177ajJpAwzF4ORF82_G-ik-UmqJ0aj2UQISaF5jRrr2EZBjFWRomA4UosYT2w/exec'; // ← ここをあなたのGAS URLに置換
+// app.js - final version with correct response handling
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby43wYy7177ajJpAwzF4ORF82_G-ik-UmqJ0aj2UQISaF5jRrr2EZBjFWRomA4UosYT2w/exec'; // ← あなたのGAS URLに置換
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
@@ -49,14 +49,20 @@ async function syncQueue(){
 
 async function sendJsonToGAS(payload){
   setStatus('Sending to server...');
-  const res = await fetch(GAS_ENDPOINT, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-  const text = await res.text();
-  let json = null;
-  try { json = JSON.parse(text); } catch(e){ json = {status:'error', message:'invalid json response', raw:text}; }
-  return json;
+  try{
+    const res = await fetch(GAS_ENDPOINT, {
+      method: 'POST',
+      // Do NOT set Content-Type header to avoid CORS preflight in this setup.
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch(e){ json = {status:'error', message:'invalid json response', raw:text}; }
+    return json;
+  }catch(err){
+    console.error('sendJsonToGAS error', err);
+    return { status: 'error', message: err.message };
+  }
 }
 
 (async function init(){
@@ -105,7 +111,13 @@ if(form){
       if(navigator.onLine){
         const res = await sendJsonToGAS(obj);
         if(res && res.status === 'ok'){
-          setStatus('Uploaded. FileId: ' + (res.fileId || 'unknown'));
+          // Prefer xlsxFileId, then sheetFileId, then fileId
+          const id = res.xlsxFileId || res.sheetFileId || res.fileId || 'unknown';
+          const url = res.xlsxUrl || res.fileUrl || null;
+          setStatus('Uploaded. FileId: ' + id);
+          if(url) {
+            console.log('Saved file URL:', url);
+          }
         } else {
           console.warn('Server error response', res);
           await queueReport(obj);
