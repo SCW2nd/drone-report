@@ -1,5 +1,5 @@
 // app.js - full corrected version
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyRQMcG210UZ8Si9HmKDqcwFBMtn5Fiy8iR6A_u-n4G-VFKLfoQ6BoJ6ptjlPxPA9VD7g/exec'; // ← ここをあなたのGAS URLに置換
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby43wYy7177ajJpAwzF4ORF82_G-ik-UmqJ0aj2UQISaF5jRrr2EZBjFWRomA4UosYT2w/exec'; // ← ここをあなたのGAS URLに置換
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
