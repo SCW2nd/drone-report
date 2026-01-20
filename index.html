@@ -23,6 +23,17 @@
     <label>レポートID<input name="reportId" required value=""></label>
     <label>日付<input name="date" type="date" required></label>
 
+    <!-- 点検チェックリスト -->
+<fieldset style="margin-top:12px">
+  <legend>点検チェックリスト</legend>
+  <label><input type="checkbox" name="chk_battery" value="battery"> バッテリー残量確認</label>
+  <label><input type="checkbox" name="chk_prop" value="prop"> プロペラ／プロテクタ確認</label>
+  <label><input type="checkbox" name="chk_gps" value="gps"> GPS受信良好</label>
+  <label><input type="checkbox" name="chk_cam" value="camera"> カメラ動作確認</label>
+  <label><input type="checkbox" name="chk_area" value="area"> 飛行エリア安全確認</label>
+  <label><input type="checkbox" name="chk_other" value="other"> その他（備考に記入）</label>
+</fieldset>
+    
     <div class="stack">
       <label>離陸時刻（Start time）<input name="startTime" type="time" required></label>
       <label>着陸時刻（End time）<input name="endTime" type="time" required></label>
