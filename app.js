@@ -133,6 +133,14 @@ if(form){
     fd.forEach((v,k) => obj[k] = v);
     obj.timestamp = new Date().toISOString();
 
+
+// collect checklist into an array of checked keys, then add to obj
+(function collectChecklist(formElement, obj){
+  const checks = Array.from(formElement.querySelectorAll('input[type="checkbox"][name^="chk_"]'));
+  const checked = checks.filter(c => c.checked).map(c => c.value);
+  obj.checklist = checked; // 配列で送る（GAS側でJSON.parse不要）
+})(form, obj);
+    
     try{
       const pos = await fetchGPSOnce().catch(()=>null);
       if(pos){
