@@ -15,6 +15,22 @@
     #status{margin-top:12px}
     /* 縦並び用 */
     .stack{display:flex;flex-direction:column;gap:8px}
+    /* チェックボックスを小さくしてラベルと横並びに */
+input[type="checkbox"]{
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* チェックリストのラベルを整列 */
+fieldset.checklist label{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 0.95rem;
+}
   </style>
 </head>
 <body>
