@@ -1,5 +1,5 @@
 // app.js - updated: ensure lat/lng always included and debug logging
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwoMfSMwzbBIikwCF0OQIPeYtdSMdqKDyW61VGkVbAidv6X4hk5gXHFlmKzc9QcPw47zA/exec';
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwAFo7j5gihjdLRVgP4jYplfqVgXntyzo5pmGBI-4H9Dl1PJX1w2CRAzEeoy8b82Lr2jg/exec';
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
