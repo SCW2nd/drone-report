@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Drone Flight Report (PWA)</title>
+  <title>ドローン飛行レポート (PWA)</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:16px}
@@ -13,30 +13,41 @@
     .half{flex:1}
     .small{font-size:0.9em;color:#666}
     #status{margin-top:12px}
+    /* 縦並び用 */
+    .stack{display:flex;flex-direction:column;gap:8px}
   </style>
 </head>
 <body>
-  <h2>Flight Report</h2>
+  <h2>フライトレポート</h2>
   <form id="reportForm">
-    <label>Report ID<input name="reportId" required value=""></label>
-    <label>Date<input name="date" type="date" required></label>
-    <div class="row">
-      <div class="half"><label>Start time<input name="startTime" type="time" required></label></div>
-      <div class="half"><label>End time<input name="endTime" type="time" required></label></div>
+    <label>レポートID<input name="reportId" required value=""></label>
+    <label>日付<input name="date" type="date" required></label>
+
+    <div class="stack">
+      <label>離陸時刻（Start time）<input name="startTime" type="time" required></label>
+      <label>着陸時刻（End time）<input name="endTime" type="time" required></label>
     </div>
-    <label>Operator<input name="operator" required></label>
-    <label>Drone model / S/N<input name="drone"></label>
-    <label>Purpose<select name="purpose"><option>Inspection</option><option>Aerial Photo</option><option>Survey</option><option>Practice</option></select></label>
-    <label>Location description<textarea name="location" rows="2"></textarea></label>
-    <div class="row">
-      <div class="half"><label>Latitude<input name="lat" id="lat" readonly></label></div>
-      <div class="half"><label>Longitude<input name="lng" id="lng" readonly></label></div>
+
+    <label>操縦者（オペレータ）<input name="operator" required></label>
+    <label>機体（機種 / S/N）<input name="drone"></label>
+    <label>目的<select name="purpose">
+      <option>点検（Inspection）</option>
+      <option>空撮（Aerial Photo）</option>
+      <option>測量（Survey）</option>
+      <option>練習（Practice）</option>
+    </select></label>
+    <label>飛行場所（説明）<textarea name="location" rows="2"></textarea></label>
+
+    <div class="stack">
+      <label>緯度（Latitude）<input name="lat" id="lat" readonly></label>
+      <label>経度（Longitude）<input name="lng" id="lng" readonly></label>
     </div>
-    <label>Notes<textarea name="notes" rows="3"></textarea></label>
+
+    <label>備考（Notes）<textarea name="notes" rows="3"></textarea></label>
 
     <label class="small"><input type="checkbox" id="saveLocal"> オフライン時は端末に保存（自動同期）</label>
 
-    <button type="submit">保存 → PDF を Google Drive に送信</button>
+    <button type="submit">保存して Google Drive に送信（PDF）</button>
   </form>
 
   <div id="status"></div>
@@ -46,4 +57,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
