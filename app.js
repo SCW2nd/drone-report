@@ -1,5 +1,5 @@
-// app.js - final version with correct response handling
-const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby43wYy7177ajJpAwzF4ORF82_G-ik-UmqJ0aj2UQISaF5jRrr2EZBjFWRomA4UosYT2w/exec'; // ← あなたのGAS URLに置換
+// app.js - updated: ensure lat/lng always included and debug logging
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby43wYy7177ajJpAwzF4ORF82_G-ik-UmqJ0aj2UQISaF5jRrr2EZBjFWRomA4UosYT2w/exec';
 const form = document.getElementById('reportForm');
 const statusEl = document.getElementById('status');
 
@@ -22,22 +22,18 @@ function fetchGPSOnce(timeout = 30000){
       if(done) return;
       done = true;
       clearTimeout(timer);
-      // provide detailed error message
       reject(new Error('Geolocation error: ' + (err && err.message ? err.message : JSON.stringify(err))));
     };
 
     const timer = setTimeout(() => {
       if(done) return;
       done = true;
-      // try to stop any ongoing watch if set
       if(watchId !== null) navigator.geolocation.clearWatch(watchId);
       reject(new Error('Geolocation timeout'));
     }, timeout);
 
-    // try getCurrentPosition first
     let watchId = null;
     navigator.geolocation.getCurrentPosition(onSuccess, err => {
-      // if immediate getCurrentPosition fails, fallback to watchPosition
       console.warn('getCurrentPosition failed, trying watchPosition', err);
       try{
         watchId = navigator.geolocation.watchPosition(onSuccess, onError, { enableHighAccuracy: true, maximumAge: 0 });
@@ -82,9 +78,10 @@ async function syncQueue(){
 async function sendJsonToGAS(payload){
   setStatus('Sending to server...');
   try{
+    // debug log
+    try{ console.log('Sending payload', JSON.parse(JSON.stringify(payload))); }catch(e){}
     const res = await fetch(GAS_ENDPOINT, {
       method: 'POST',
-      // Do NOT set Content-Type header to avoid CORS preflight in this setup.
       body: JSON.stringify(payload)
     });
     const text = await res.text();
@@ -121,6 +118,13 @@ window.addEventListener('online', () => {
   syncQueue();
 });
 
+function normalizeLatLng(obj){
+  // prefer explicit lat/lng, fallback to latitude/longitude, else empty string
+  obj.lat = obj.lat || obj.latitude || obj.Latitude || obj.LAT || '';
+  obj.lng = obj.lng || obj.longitude || obj.Longitude || obj.LON || obj.LONG || '';
+  return obj;
+}
+
 if(form){
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -132,24 +136,30 @@ if(form){
     try{
       const pos = await fetchGPSOnce().catch(()=>null);
       if(pos){
-        obj.lat = pos.lat;
-        obj.lng = pos.lng;
+        // if form inputs empty, fill them
+        if(!obj.lat) obj.lat = pos.lat;
+        if(!obj.lng) obj.lng = pos.lng;
+        // also reflect in form inputs if present
+        const latEl = document.getElementById('lat');
+        const lngEl = document.getElementById('lng');
+        if(latEl && !latEl.value) latEl.value = pos.lat;
+        if(lngEl && !lngEl.value) lngEl.value = pos.lng;
       }
     }catch(err){
       console.warn('GPS fetch failed on submit', err);
     }
 
+    // ensure lat/lng fields exist with normalized keys
+    normalizeLatLng(obj);
+
     try{
       if(navigator.onLine){
         const res = await sendJsonToGAS(obj);
         if(res && res.status === 'ok'){
-          // Prefer xlsxFileId, then sheetFileId, then fileId
           const id = res.xlsxFileId || res.sheetFileId || res.fileId || 'unknown';
           const url = res.xlsxUrl || res.fileUrl || null;
           setStatus('Uploaded. FileId: ' + id);
-          if(url) {
-            console.log('Saved file URL:', url);
-          }
+          if(url) console.log('Saved file URL:', url);
         } else {
           console.warn('Server error response', res);
           await queueReport(obj);
