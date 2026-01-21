@@ -108,20 +108,20 @@ c.appendChild(s);
 function collectAnswers(){
   const answers = [];
   formItems.forEach(it=>{
-    const name = it.itemId;
-    let value = '';
-    if(it.inputType === 'radio'){
-      const sel = document.querySelector(input[name="${name}"]:checked);
-      value = sel ? sel.value : '';
-    } else if(it.inputType === 'checkbox'){
-      const cb = document.querySelector(input[name="${name}"]);
-      value = cb && cb.checked ? 'true' : '';
-    } else {
-      const inp = document.querySelector(input[name="${name}"]);
-      value = inp ? inp.value : '';
-    }
-    const comment = (document.querySelector(input[name="${name}_comment"]) || {}).value || '';
-    answers.push({itemId: name, value, comment});
+ const name = it.itemId;
+ let value = '';
+ if(it.inputType === 'radio'){
+   const sel = document.querySelector(input[name="${name}"]:checked);
+   value = sel ? sel.value : '';
+ } else if(it.inputType === 'checkbox'){
+   const cb = document.querySelector(input[name="${name}"]);
+   value = cb && cb.checked ? 'true' : '';
+ } else {
+   const inp = document.querySelector(input[name="${name}"]);
+   value = inp ? inp.value : '';
+ }
+ const comment = (document.querySelector(input[name="${name}_comment"]) || {}).value || '';
+ answers.push({itemId: name, value, comment});
   });
   return answers;
 }
