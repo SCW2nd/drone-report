@@ -14,7 +14,6 @@ input[type="text"], input[type="date"], input[type="time"], textarea {width:100%
 button{flex:1; padding:12px; font-size:16px; border-radius:8px; border:0; background:#1976d2; color:#fff}
 .small{font-size:13px; color:#666}
 .radio-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:6px}
-@media (min-width:600px){ h1{font-size:24px} }
 </style>
 </head>
 <body>
@@ -33,15 +32,14 @@ button{flex:1; padding:12px; font-size:16px; border-radius:8px; border:0; backgr
   <button id="saveBtn" type="button">送信</button>
 </div>
 <p class="small">送信するとスプレッドシートに記録されます。初回はネットワーク環境を確認してください。</p>
-
-  <script>
+<script>
 function createElement(tag, props){ const el = document.createElement(tag); if(props) Object.assign(el, props); return el; }
 let formItems = [];
 // フォーム定義を受け取りフォームを作成
 function buildForm(items){
   formItems = items;
   const c = document.getElementById('formContainer');
-  c.innerHTML = 'https://script.google.com/macros/s/AKfycbwqH6nPXye6KP6hwPlAo0zzGdI-fRXQiV_1UoGmWaQHpy_4CQElYyjGiSKB2BzoTeAuNA/exec';
+  c.innerHTML = '';
   items.forEach(it=>{
     const s = createElement('div',{className:'section'});
     const title = createElement('div',{textContent: it.label});
@@ -49,7 +47,7 @@ function buildForm(items){
     s.appendChild(title);
     if(it.inputType === 'radio'){
   const row = createElement('div',{className:'radio-row'});
-  it.options.forEach(opt=>{
+  it.options.forEach(opt=&gt;{
     const id = it.itemId + '_' + opt;
     const input = createElement('input'); input.type='radio'; input.name=it.itemId; input.value=opt; input.id=id;
     const lbl = createElement('label'); lbl.htmlFor = id; lbl.style.cursor='pointer';
@@ -57,10 +55,12 @@ function buildForm(items){
     row.appendChild(lbl);
   });
   s.appendChild(row);
+
 } else if(it.inputType === 'checkbox'){
   const cb = createElement('input'); cb.type='checkbox'; cb.name=it.itemId; cb.value='true';
   const lbl = createElement('label'); lbl.style.cursor='pointer'; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(' 該当'));
   s.appendChild(lbl);
+
 } else {
   const inp = createElement('input'); inp.type='text'; inp.name=it.itemId; s.appendChild(inp);
 }
@@ -71,13 +71,14 @@ s.appendChild(comment);
 
 c.appendChild(s);
  });
+}
 function collectAnswers(){
   const answers = [];
   formItems.forEach(it=>{
     const name = it.itemId;
     let value = '';
     if(it.inputType === 'radio'){
-      const sel = document.querySelector(input[name="${name}"]);
+      const sel = document.querySelector(input[name="${name}"]:checked);
       value = sel ? sel.value : '';
     } else if(it.inputType === 'checkbox'){
       const cb = document.querySelector(input[name="${name}"]);
@@ -94,7 +95,6 @@ function collectAnswers(){
 function onLoadedDefinition(res){
   if(res && res.items && res.items.length) buildForm(res.items);
   else {
-    // fallback
     buildForm([
       {itemId:'pre_reg', label:'飛行する機体をドローン情報基盤システムに登録しましたか？', inputType:'radio', options:['はい','いいえ']},
       {itemId:'plan_report', label:'飛行計画を通報しましたか？', inputType:'radio', options:['はい','いいえ']}
@@ -112,8 +112,4 @@ document.getElementById('saveBtn').addEventListener('click', function(){
   const answers = collectAnswers();
   google.script.run.withSuccessHandler(onSubmitResult).submitAnswers({ date, time, operator, answers });
 });
-// load form definition from server
-google.script.run.withSuccessHandler(onLoadedDefinition).getFormDefinition();
-</script>
-</body>
-</html>
+// load form definition from server google.script.run.withSuccessHandler(onLoadedDefinition).getFormDefinition(); </script> </body> </html>
