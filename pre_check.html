@@ -33,146 +33,88 @@ button{flex:1; padding:12px; font-size:16px; border-radius:8px; border:0; backgr
   <button id="saveBtn" type="button">送信</button>
 </div>
 <p class="small">送信するとスプレッドシートに記録されます。初回はネットワーク環境を確認してください。</p>
-
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkweEHyZ6txqKAHRVHK91f4VN7bTp0Rgk4XIzn01byOfRv06AGsJO9lT-jI5jdVY5xew/exec'; // ← ここを置換
-const FORM_DEF_URL = ''; // optional
-
-const fallbackFormItems = [
-  {itemId:'pre_reg', label:'飛行する機体をドローン情報基盤システムに登録しましたか？', inputType:'radio', options:['はい','いいえ']},
-  {itemId:'plan_report', label:'飛行計画をドローン情報基盤システムに通報（登録）しましたか？', inputType:'radio', options:['はい','いいえ']},
-  {itemId:'health', label:'健康状態は良好ですか？', inputType:'radio', options:['はい','いいえ']},
-  {itemId:'alcohol', label:'アルコールや薬物は摂取していませんか？', inputType:'radio', options:['はい','いいえ']},
-  {itemId:'id_plate', label:'機体登録記号の確認（記載・汚れ・DIPS APPリモートID確認）', inputType:'radio', options:['はい','いいえ']},
-  {itemId:'no_emergency_area', label:'飛行するエリアが緊急用務空域でないことを確認しましたか？', inputType:'radio', options:['はい','いいえ']}
-];
-
+function createElement(tag, props){ const el = document.createElement(tag); if(props) Object.assign(el, props); return el; }
 let formItems = [];
-
-async function loadFormDefinition(){
-  if(FORM_DEF_URL){
-    try{
-      const r = await fetch(FORM_DEF_URL);
-      if(!r.ok) throw new Error('フォーム定義取得失敗');
-      const j = await r.json();
-      formItems = j.items || fallbackFormItems;
-      return;
-    }catch(e){
-      console.warn('FormDefinition fetch failed, use fallback', e);
-      formItems = fallbackFormItems;
-    }
-  } else {
-    formItems = fallbackFormItems;
-  }
-}
-
-function buildForm(){
+// フォーム定義を受け取りフォームを作成
+function buildForm(items){
+  formItems = items;
   const c = document.getElementById('formContainer');
-  c.innerHTML = '';
-  formItems.forEach(it=>{
-    const s = document.createElement('div');
-    s.className = 'section';
-    const title = document.createElement('div');
-    title.textContent = it.label;
+  c.innerHTML = 'https://script.google.com/macros/s/AKfycbwqH6nPXye6KP6hwPlAo0zzGdI-fRXQiV_1UoGmWaQHpy_4CQElYyjGiSKB2BzoTeAuNA/exec';
+  items.forEach(it=>{
+    const s = createElement('div',{className:'section'});
+    const title = createElement('div',{textContent: it.label});
     title.style.fontWeight = '600';
     s.appendChild(title);
-
-    if (it.inputType === 'radio') {
-      const row = document.createElement('div');
-      row.className = 'radio-row';
-      it.options.forEach(opt => {
-        const id = it.itemId + '_' + opt;
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = it.itemId;
-        input.value = opt;
-        input.id = id;
-
-        const lbl = document.createElement('label');
-        lbl.htmlFor = id;
-        lbl.style.cursor = 'pointer';
-        lbl.appendChild(input);
-        lbl.appendChild(document.createTextNode(' ' + opt));
-
-        row.appendChild(lbl);
-      });
-      s.appendChild(row);
-
-    } else if(it.inputType === 'checkbox'){
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.name = it.itemId;
-      cb.value = 'true';
-      const lbl = document.createElement('label');
-      lbl.style.cursor = 'pointer';
-      lbl.appendChild(cb);
-      lbl.appendChild(document.createTextNode(' 該当'));
-      s.appendChild(lbl);
-
-    } else {
-      const inp = document.createElement('input');
-      inp.type = 'text';
-      inp.name = it.itemId;
-      s.appendChild(inp);
-    }
-
-    const comment = document.createElement('input');
-    comment.type = 'text';
-    comment.name = it.itemId + '_comment';
-    comment.placeholder = 'コメント（任意）';
-    comment.style.marginTop = '8px';
-    s.appendChild(comment);
-
-    c.appendChild(s);
+    if(it.inputType === 'radio'){
+  const row = createElement('div',{className:'radio-row'});
+  it.options.forEach(opt=>{
+    const id = it.itemId + '_' + opt;
+    const input = createElement('input'); input.type='radio'; input.name=it.itemId; input.value=opt; input.id=id;
+    const lbl = createElement('label'); lbl.htmlFor = id; lbl.style.cursor='pointer';
+    lbl.appendChild(input); lbl.appendChild(document.createTextNode(' ' + opt));
+    row.appendChild(lbl);
   });
+  s.appendChild(row);
+} else if(it.inputType === 'checkbox'){
+  const cb = createElement('input'); cb.type='checkbox'; cb.name=it.itemId; cb.value='true';
+  const lbl = createElement('label'); lbl.style.cursor='pointer'; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(' 該当'));
+  s.appendChild(lbl);
+} else {
+  const inp = createElement('input'); inp.type='text'; inp.name=it.itemId; s.appendChild(inp);
 }
 
+const comment = createElement('input'); comment.type='text'; comment.name = it.itemId + '_comment'; comment.placeholder='コメント（任意）';
+comment.style.marginTop = '8px';
+s.appendChild(comment);
+
+c.appendChild(s);
+ });
+}
 function collectAnswers(){
   const answers = [];
   formItems.forEach(it=>{
     const name = it.itemId;
     let value = '';
     if(it.inputType === 'radio'){
-      const sel = document.querySelector(`input[name="${name}"]:checked`);
+      const sel = document.querySelector(input[name="${name}"]:checked);
       value = sel ? sel.value : '';
     } else if(it.inputType === 'checkbox'){
-      const cb = document.querySelector(`input[name="${name}"]`);
+      const cb = document.querySelector(input[name="${name}"]);
       value = cb && cb.checked ? 'true' : '';
     } else {
-      const inp = document.querySelector(`input[name="${name}"]`);
+      const inp = document.querySelector(input[name="${name}"]);
       value = inp ? inp.value : '';
     }
-    const comment = (document.querySelector(`input[name="${name}_comment"]`) || {}).value || '';
-    answers.push({itemId: name, value, comment});
+    const comment = (document.querySelector(input[name="${name}_comment"]) || {}).value || '';
+    answers.push({ itemId: name, value, comment });
   });
   return answers;
 }
-
-async function send(){
-  if(!WEB_APP_URL || WEB_APP_URL.includes('<<')) { alert('WEB_APP_URL を設定してください'); return; }
+function onLoadedDefinition(res){
+  if(res && res.items && res.items.length) buildForm(res.items);
+  else {
+    // fallback
+    buildForm([
+      {itemId:'pre_reg', label:'飛行する機体をドローン情報基盤システムに登録しましたか？', inputType:'radio', options:['はい','いいえ']},
+      {itemId:'plan_report', label:'飛行計画を通報しましたか？', inputType:'radio', options:['はい','いいえ']}
+    ]);
+  }
+}
+function onSubmitResult(res){
+  if(res && res.ok) alert('保存しました');
+  else alert('保存に失敗しました');
+}
+document.getElementById('saveBtn').addEventListener('click', function(){
   const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
   const time = document.getElementById('time').value || new Date().toTimeString().slice(0,5);
   const operator = document.getElementById('operator').value || '';
   const answers = collectAnswers();
-  const payload = { date, time, operator, answers };
-  try{
-    const res = await fetch(WEB_APP_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const j = await res.json();
-    if(j && j.ok){ alert('保存しました'); }
-    else { alert('保存に失敗しました'); console.log(j); }
-  }catch(err){
-    alert('送信エラー。ネットワークを確認してください。');
-    console.error(err);
-  }
-}
-
-document.getElementById('saveBtn').addEventListener('click', send);
-
-(async ()=>{ await loadFormDefinition(); buildForm(); })();
+  google.script.run.withSuccessHandler(onSubmitResult).submitAnswers({ date, time, operator, answers });
+});
+// load form definition from server
+google.script.run.withSuccessHandler(onLoadedDefinition).getFormDefinition();
 </script>
+
 </body>
 </html>
