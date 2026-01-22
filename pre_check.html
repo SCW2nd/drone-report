@@ -8,12 +8,13 @@
 body{font-family:system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif; padding:12px; max-width:900px; margin:auto; background:#fafafa; color:#111}
 h1{font-size:20px; margin:8px 0}
 .label{font-weight:600; margin-top:10px; display:block}
-input[type="text"], input[type="date"], input[type="time"] {width:100%; padding:10px; font-size:16px; box-sizing:border-box; margin-top:6px; border:1px solid #ccc; border-radius:6px; background:#fff}
+input[type="text"], input[type="date"], input[type="time"], textarea {width:100%; padding:10px; font-size:16px; box-sizing:border-box; margin-top:6px; border:1px solid #ccc; border-radius:6px; background:#fff}
 .section{background:#fff; border:1px solid #e3e3e3; padding:10px; margin-top:10px; border-radius:8px}
 .controls{display:flex; gap:8px; margin-top:12px}
 button{flex:1; padding:12px; font-size:16px; border-radius:8px; border:0; background:#1976d2; color:#fff}
 .small{font-size:13px; color:#666}
 .radio-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:6px}
+@media (min-width:600px){ h1{font-size:24px} }
 </style>
 </head>
 <body>
@@ -27,83 +28,87 @@ button{flex:1; padding:12px; font-size:16px; border-radius:8px; border:0; backgr
 <label class="label">操縦者
   <input id="operator" type="text" placeholder="名前">
 </label>
+
 <div id="formContainer"></div>
 <div class="controls">
   <button id="saveBtn" type="button">送信</button>
 </div>
-<p class="small">送信するとスプレッドシートに記録されます。</p>
+<p class="small">送信するとスプレッドシートに記録されます。初回はネットワーク環境を確認してください。</p>
+
 <script>
 function createElement(tag, props){ const el = document.createElement(tag); if(props) Object.assign(el, props); return el; }
+
 let formItems = [];
-// フォーム定義を受け取りフォームを作成
 function buildForm(items){
   formItems = items;
   const c = document.getElementById('formContainer');
   c.innerHTML = '';
   items.forEach(it=>{
     const s = createElement('div',{className:'section'});
-    const title = createElement('div',{textContent: it.label});
-    title.style.fontWeight = '600';
+    const title = createElement('div',{textContent: it.label, style: 'font-weight:600'});
     s.appendChild(title);
+
     if(it.inputType === 'radio'){
-  const row = createElement('div',{className:'radio-row'});
-  it.options.forEach(opt=>{
-    const id = it.itemId + '_' + opt;
-    const input = createElement('input'); input.type='radio'; input.name=it.itemId; input.value=opt; input.id=id;
-    const lbl = createElement('label'); lbl.htmlFor = id; lbl.style.cursor='pointer';
-    lbl.appendChild(input); lbl.appendChild(document.createTextNode(' ' + opt));
-    row.appendChild(lbl);
+      const row = createElement('div',{className:'radio-row'});
+      it.options.forEach(opt=>{
+        const id = it.itemId + '_' + opt;
+        const input = createElement('input'); input.type='radio'; input.name=it.itemId; input.value=opt; input.id=id;
+        const lbl = createElement('label'); lbl.htmlFor = id; lbl.style.cursor='pointer';
+        lbl.appendChild(input); lbl.appendChild(document.createTextNode(' ' + opt));
+        row.appendChild(lbl);
+      });
+      s.appendChild(row);
+    } else if(it.inputType === 'checkbox'){
+      const cb = createElement('input'); cb.type='checkbox'; cb.name=it.itemId; cb.value='true';
+      const lbl = createElement('label'); lbl.style.cursor='pointer'; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(' 該当'));
+      s.appendChild(lbl);
+    } else {
+      const inp = createElement('input'); inp.type='text'; inp.name=it.itemId; s.appendChild(inp);
+    }
+
+    const comment = createElement('input'); comment.type='text'; comment.name = it.itemId + '_comment'; comment.placeholder='コメント（任意）'; comment.style.marginTop='8px';
+    s.appendChild(comment);
+    c.appendChild(s);
   });
-  s.appendChild(row);
-} else if(it.inputType === 'checkbox'){
-  const cb = createElement('input'); cb.type='checkbox'; cb.name=it.itemId; cb.value='true';
-  const lbl = createElement('label'); lbl.style.cursor='pointer'; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(' 該当'));
-  s.appendChild(lbl);
-} else {
-  const inp = createElement('input'); inp.type='text'; inp.name=it.itemId; s.appendChild(inp);
 }
 
-const comment = createElement('input'); comment.type='text'; comment.name = it.itemId + '_comment'; comment.placeholder='コメント（任意）';
-comment.style.marginTop = '8px';
-s.appendChild(comment);
-
-c.appendChild(s);
-});
-}
 function collectAnswers(){
   const answers = [];
   formItems.forEach(it=>{
     const name = it.itemId;
     let value = '';
     if(it.inputType === 'radio'){
-      const sel = document.querySelector(input[name="${name}"]:checked);
+      const sel = document.querySelector(`input[name="${name}"]:checked`);
       value = sel ? sel.value : '';
     } else if(it.inputType === 'checkbox'){
-      const cb = document.querySelector(input[name="${name}"]);
+      const cb = document.querySelector(`input[name="${name}"]`);
       value = cb && cb.checked ? 'true' : '';
     } else {
-      const inp = document.querySelector(input[name="${name}"]);
+      const inp = document.querySelector(`input[name="${name}"]`);
       value = inp ? inp.value : '';
     }
-    const comment = (document.querySelector(input[name="${name}_comment"]) || {}).value || '';
+    const comment = (document.querySelector(`input[name="${name}_comment"]`) || {}).value || '';
     answers.push({ itemId: name, value, comment });
   });
   return answers;
 }
+
 function onLoadedDefinition(res){
   if(res && res.items && res.items.length) buildForm(res.items);
   else {
-    // fallback
+    // fallback minimal items if none
     buildForm([
       {itemId:'pre_reg', label:'飛行する機体をドローン情報基盤システムに登録しましたか？', inputType:'radio', options:['はい','いいえ']},
       {itemId:'plan_report', label:'飛行計画を通報しましたか？', inputType:'radio', options:['はい','いいえ']}
     ]);
   }
 }
+
 function onSubmitResult(res){
   if(res && res.ok) alert('保存しました');
   else alert('保存に失敗しました');
 }
+
 document.getElementById('saveBtn').addEventListener('click', function(){
   const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
   const time = document.getElementById('time').value || new Date().toTimeString().slice(0,5);
@@ -111,7 +116,8 @@ document.getElementById('saveBtn').addEventListener('click', function(){
   const answers = collectAnswers();
   google.script.run.withSuccessHandler(onSubmitResult).submitAnswers({ date, time, operator, answers });
 });
-// load form definition from server
+
+// 初期ロードでフォーム定義を取得
 google.script.run.withSuccessHandler(onLoadedDefinition).getFormDefinition();
 </script>
 </body>
