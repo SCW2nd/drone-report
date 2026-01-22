@@ -39,7 +39,7 @@ let formItems = [];
 function buildForm(items){
   formItems = items;
   const c = document.getElementById('formContainer');
-  c.innerHTML = 'https://script.google.com/macros/s/AKfycbzkweEHyZ6txqKAHRVHK91f4VN7bTp0Rgk4XIzn01byOfRv06AGsJO9lT-jI5jdVY5xew/exec';
+  c.innerHTML = '';
   items.forEach(it=>{
     const s = createElement('div',{className:'section'});
     const title = createElement('div',{textContent: it.label});
@@ -68,7 +68,7 @@ comment.style.marginTop = '8px';
 s.appendChild(comment);
 
 c.appendChild(s);
- });
+});
 }
 function collectAnswers(){
   const answers = [];
