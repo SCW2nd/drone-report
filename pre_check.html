@@ -76,7 +76,7 @@ function collectAnswers(){
     const name = it.itemId;
     let value = '';
     if(it.inputType === 'radio'){
-      const sel = document.querySelector(input[name="${name}"]:checked);
+      const sel = document.querySelector(input[name="${name}"]);
       value = sel ? sel.value : '';
     } else if(it.inputType === 'checkbox'){
       const cb = document.querySelector(input[name="${name}"]);
