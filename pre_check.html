@@ -39,8 +39,6 @@ let formItems = [];
 function buildForm(items){
   formItems = items;
   const c = document.getElementById('formContainer');
- const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzkweEHyZ6txqKAHRVHK91f4VN7bTp0Rgk4XIzn01byOfRv06AGsJO9lT-jI5jdVY5xew/exec'; // ← ここを置換
-const FORM_DEF_URL = ''; // optional
   c.innerHTML = 'https://script.google.com/macros/s/AKfycbzkweEHyZ6txqKAHRVHK91f4VN7bTp0Rgk4XIzn01byOfRv06AGsJO9lT-jI5jdVY5xew/exec';
   items.forEach(it=>{
     const s = createElement('div',{className:'section'});
